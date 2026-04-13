@@ -3,13 +3,22 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: PWA Universal Personalizável - Multitenancy API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: tenants
+    description: Tenant (business) management
+  - name: products
+    description: Product catalog management
+  - name: sales
+    description: Sales and transactions
+  - name: dashboard
+    description: Dashboard summaries and analytics
+
 paths:
   /healthz:
     get:
@@ -24,6 +33,366 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /tenants:
+    get:
+      operationId: listTenants
+      tags: [tenants]
+      summary: List all tenants
+      responses:
+        "200":
+          description: List of tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tenant"
+    post:
+      operationId: createTenant
+      tags: [tenants]
+      summary: Create a new tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTenantBody"
+      responses:
+        "201":
+          description: Tenant created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+
+  /tenants/{id}:
+    get:
+      operationId: getTenant
+      tags: [tenants]
+      summary: Get tenant by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tenant found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateTenant
+      tags: [tenants]
+      summary: Update tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTenantBody"
+      responses:
+        "200":
+          description: Tenant updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "404":
+          description: Not found
+
+  /tenants/slug/{slug}:
+    get:
+      operationId: getTenantBySlug
+      tags: [tenants]
+      summary: Get tenant by slug (used at login)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tenant found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "404":
+          description: Not found
+
+  /tenants/{tenantId}/products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List products for a tenant
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: category
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Product list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a product
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductBody"
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /tenants/{tenantId}/products/{id}:
+    patch:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update a product
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductBody"
+      responses:
+        "200":
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete a product
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /tenants/{tenantId}/sales:
+    get:
+      operationId: listSales
+      tags: [sales]
+      summary: List sales for a tenant
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: date
+          in: query
+          schema:
+            type: ["string", "null"]
+          description: Filter by date (YYYY-MM-DD)
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Sales list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sale"
+    post:
+      operationId: createSale
+      tags: [sales]
+      summary: Record a new sale
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSaleBody"
+      responses:
+        "201":
+          description: Sale recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+
+  /tenants/{tenantId}/sales/{id}:
+    get:
+      operationId: getSale
+      tags: [sales]
+      summary: Get a sale by ID
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sale found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteSale
+      tags: [sales]
+      summary: Delete/cancel a sale
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /tenants/{tenantId}/dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get dashboard summary for a tenant
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /tenants/{tenantId}/dashboard/recent:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent sales activity (last 10)
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Recent sales
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sale"
+
+  /tenants/{tenantId}/dashboard/top-products:
+    get:
+      operationId: getTopProducts
+      tags: [dashboard]
+      summary: Get top selling products
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Top products list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TopProduct"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +403,281 @@ components:
       required:
         - status
 
+    Tenant:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        name:
+          type: string
+        businessType:
+          type: string
+          description: "barbershop | restaurant | store | salon"
+        primaryColor:
+          type: string
+        secondaryColor:
+          type: string
+        logo:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - slug
+        - name
+        - businessType
+        - primaryColor
+        - secondaryColor
+        - logo
+        - phone
+        - address
+        - active
+        - createdAt
+
+    CreateTenantBody:
+      type: object
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        businessType:
+          type: string
+        primaryColor:
+          type: string
+        secondaryColor:
+          type: string
+        logo:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+      required:
+        - slug
+        - name
+        - businessType
+        - primaryColor
+        - secondaryColor
+
+    UpdateTenantBody:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        primaryColor:
+          type: ["string", "null"]
+        secondaryColor:
+          type: ["string", "null"]
+        logo:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        active:
+          type: ["boolean", "null"]
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        price:
+          type: number
+        category:
+          type: ["string", "null"]
+        barcode:
+          type: ["string", "null"]
+        stock:
+          type: ["integer", "null"]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - tenantId
+        - name
+        - description
+        - price
+        - category
+        - barcode
+        - stock
+        - active
+        - createdAt
+
+    CreateProductBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        price:
+          type: number
+        category:
+          type: ["string", "null"]
+        barcode:
+          type: ["string", "null"]
+        stock:
+          type: ["integer", "null"]
+      required:
+        - name
+        - price
+
+    UpdateProductBody:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        price:
+          type: ["number", "null"]
+        category:
+          type: ["string", "null"]
+        barcode:
+          type: ["string", "null"]
+        stock:
+          type: ["integer", "null"]
+        active:
+          type: ["boolean", "null"]
+
+    SaleItem:
+      type: object
+      properties:
+        productId:
+          type: ["integer", "null"]
+        productName:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        total:
+          type: number
+      required:
+        - productName
+        - quantity
+        - unitPrice
+        - total
+        - productId
+
+    Sale:
+      type: object
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        customerName:
+          type: ["string", "null"]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SaleItem"
+        totalAmount:
+          type: number
+        paymentMethod:
+          type: string
+          description: "cash | card | pix | other"
+        notes:
+          type: ["string", "null"]
+        synced:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - tenantId
+        - customerName
+        - items
+        - totalAmount
+        - paymentMethod
+        - notes
+        - synced
+        - createdAt
+
+    CreateSaleBody:
+      type: object
+      properties:
+        customerName:
+          type: ["string", "null"]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SaleItem"
+        totalAmount:
+          type: number
+        paymentMethod:
+          type: string
+        notes:
+          type: ["string", "null"]
+      required:
+        - items
+        - totalAmount
+        - paymentMethod
+
+    DashboardSummary:
+      type: object
+      properties:
+        todayTotal:
+          type: number
+        todaySalesCount:
+          type: integer
+        weekTotal:
+          type: number
+        monthTotal:
+          type: number
+        averageTicket:
+          type: number
+        topPaymentMethod:
+          type: string
+        productsCount:
+          type: integer
+        lowStockCount:
+          type: integer
+      required:
+        - todayTotal
+        - todaySalesCount
+        - weekTotal
+        - monthTotal
+        - averageTicket
+        - topPaymentMethod
+        - productsCount
+        - lowStockCount
+
+    TopProduct:
+      type: object
+      properties:
+        productId:
+          type: ["integer", "null"]
+        productName:
+          type: string
+        totalSold:
+          type: integer
+        totalRevenue:
+          type: number
+      required:
+        - productId
+        - productName
+        - totalSold
+        - totalRevenue
