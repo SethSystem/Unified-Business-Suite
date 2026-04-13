@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,8 +19,16 @@ const queryClient = new QueryClient();
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { tenant, isLoading } = useTenant();
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && !tenant) {
+      navigate("/");
+    }
+  }, [isLoading, tenant, navigate]);
+
   if (isLoading) return null;
-  if (!tenant) return <Redirect to="/" />;
+  if (!tenant) return null;
   return <Component />;
 }
 
