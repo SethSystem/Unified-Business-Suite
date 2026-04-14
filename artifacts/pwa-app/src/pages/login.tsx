@@ -10,6 +10,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Briefcase, Plus, LogIn, Scissors, UtensilsCrossed, ShoppingBag, Sparkles } from "lucide-react";
 import { BusinessIcon } from "@/components/layout";
 
+function lightenHex(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const mix = (v: number) => Math.min(255, Math.round(v + (255 - v) * 0.35));
+  return `#${mix(r).toString(16).padStart(2, "0")}${mix(g).toString(16).padStart(2, "0")}${mix(b).toString(16).padStart(2, "0")}`;
+}
+
 function slugify(text: string) {
   return text
     .normalize("NFD")
@@ -55,7 +63,11 @@ export default function Login() {
 
   const { data: tenants } = useListTenants();
 
-  const { refetch } = useGetTenantBySlug(slug, {
+  const { refetch: fetchBySlug } = useGetTenantBySlug(slug, {
+    query: { enabled: false, retry: false }
+  });
+
+  const { refetch: fetchByRegSlug } = useGetTenantBySlug(regSlug, {
     query: { enabled: false, retry: false }
   });
 
@@ -79,7 +91,7 @@ export default function Login() {
     if (!slug.trim()) return;
     setIsSubmitting(true);
     try {
-      const { data, isError } = await refetch();
+      const { data, isError } = await fetchBySlug();
       if (isError || !data) {
         toast({
           title: "Estabelecimento não encontrado",
@@ -107,6 +119,7 @@ export default function Login() {
         slug: regSlug.trim(),
         businessType: regType,
         primaryColor: regColor,
+        secondaryColor: lightenHex(regColor),
       });
       setTenant(newTenant);
       toast({ title: "Estabelecimento criado!", description: `Bem-vindo(a) ao ${newTenant.name}!` });
@@ -116,7 +129,18 @@ export default function Login() {
       const msg = err?.response?.data?.error || err?.message || "";
       const isDuplicate = status === 409 || msg.toLowerCase().includes("unique") || msg.toLowerCase().includes("duplicate") || msg.toLowerCase().includes("em uso") || msg.toLowerCase().includes("already");
       if (isDuplicate) {
-        setSlugConflict(true);
+        toast({ title: "Código já existe — entrando...", description: "Encontramos seu estabelecimento. Acessando agora." });
+        try {
+          const { data } = await fetchByRegSlug();
+          if (data) {
+            setTenant(data);
+            setLocation("/dashboard");
+          } else {
+            setSlugConflict(true);
+          }
+        } catch {
+          setSlugConflict(true);
+        }
       } else {
         toast({ title: "Erro ao criar", description: msg || "Tente novamente.", variant: "destructive" });
       }
