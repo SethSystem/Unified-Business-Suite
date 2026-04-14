@@ -51,6 +51,7 @@ export default function Login() {
   const [regType, setRegType] = useState("barbershop");
   const [regColor, setRegColor] = useState("#1a1a2e");
   const [isRegistering, setIsRegistering] = useState(false);
+  const [slugConflict, setSlugConflict] = useState(false);
 
   const { data: tenants } = useListTenants();
 
@@ -111,13 +112,14 @@ export default function Login() {
       toast({ title: "Estabelecimento criado!", description: `Bem-vindo(a) ao ${newTenant.name}!` });
       setLocation("/dashboard");
     } catch (err: any) {
-      const msg = err?.response?.data?.error || err?.message || "Erro ao criar estabelecimento.";
-      const isDuplicate = msg.toLowerCase().includes("unique") || msg.toLowerCase().includes("duplicate") || msg.toLowerCase().includes("slug");
-      toast({
-        title: isDuplicate ? "Código já em uso" : "Erro ao criar",
-        description: isDuplicate ? "Escolha outro código para seu estabelecimento." : msg,
-        variant: "destructive"
-      });
+      const status = err?.response?.status || err?.status;
+      const msg = err?.response?.data?.error || err?.message || "";
+      const isDuplicate = status === 409 || msg.toLowerCase().includes("unique") || msg.toLowerCase().includes("duplicate") || msg.toLowerCase().includes("em uso") || msg.toLowerCase().includes("already");
+      if (isDuplicate) {
+        setSlugConflict(true);
+      } else {
+        toast({ title: "Erro ao criar", description: msg || "Tente novamente.", variant: "destructive" });
+      }
     } finally {
       setIsRegistering(false);
     }
@@ -218,13 +220,29 @@ export default function Login() {
                     id="regSlug"
                     placeholder="barbearia-do-ze"
                     value={regSlug}
-                    onChange={(e) => { setRegSlug(slugify(e.target.value) || e.target.value.toLowerCase()); setRegSlugEdited(true); }}
+                    onChange={(e) => { setRegSlug(slugify(e.target.value) || e.target.value.toLowerCase()); setRegSlugEdited(true); setSlugConflict(false); }}
                     autoComplete="off"
                     autoCapitalize="none"
                   />
-                  {regSlug && (
+                  {slugConflict ? (
+                    <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 space-y-2">
+                      <p className="text-sm font-medium text-amber-400">Este código já está cadastrado.</p>
+                      <p className="text-xs text-muted-foreground">Já criou este estabelecimento antes? Acesse agora:</p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="w-full border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+                        onClick={() => { setSlug(regSlug); setMode("login"); setSlugConflict(false); }}
+                      >
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Entrar com "{regSlug}"
+                      </Button>
+                      <p className="text-xs text-muted-foreground text-center">ou altere o código acima para criar um novo</p>
+                    </div>
+                  ) : regSlug ? (
                     <p className="text-xs text-muted-foreground">Você vai entrar com: <span className="font-medium text-foreground">{regSlug}</span></p>
-                  )}
+                  ) : null}
                 </div>
 
                 <div className="space-y-2">

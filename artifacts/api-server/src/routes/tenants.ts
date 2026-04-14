@@ -22,8 +22,16 @@ router.post("/tenants", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [tenant] = await db.insert(tenantsTable).values(parsed.data).returning();
-  res.status(201).json(tenant);
+  try {
+    const [tenant] = await db.insert(tenantsTable).values(parsed.data).returning();
+    res.status(201).json(tenant);
+  } catch (err: any) {
+    if (err?.code === "23505" || err?.message?.includes("unique")) {
+      res.status(409).json({ error: "Este código já está em uso. Escolha outro." });
+    } else {
+      throw err;
+    }
+  }
 });
 
 router.get("/tenants/slug/:slug", async (req, res): Promise<void> => {
