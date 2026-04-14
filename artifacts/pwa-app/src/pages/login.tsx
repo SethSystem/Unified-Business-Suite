@@ -114,13 +114,13 @@ export default function Login() {
     if (!regName.trim() || !regSlug.trim()) return;
     setIsRegistering(true);
     try {
-      const newTenant = await createTenantMutation.mutateAsync({
+      const newTenant = await createTenantMutation.mutateAsync({ data: {
         name: regName.trim(),
         slug: regSlug.trim(),
         businessType: regType,
         primaryColor: regColor,
         secondaryColor: lightenHex(regColor),
-      });
+      }});
       setTenant(newTenant);
       toast({ title: "Estabelecimento criado!", description: `Bem-vindo(a) ao ${newTenant.name}!` });
       setLocation("/dashboard");
