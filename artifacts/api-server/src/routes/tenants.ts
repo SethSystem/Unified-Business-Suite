@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { db, tenantsTable } from "@workspace/db";
 import {
@@ -11,12 +11,12 @@ import {
 
 const router: IRouter = Router();
 
-router.get("/tenants", async (_req, res): Promise<void> => {
+router.get("/tenants", async (_req: Request, res: Response): Promise<void> => {
   const tenants = await db.select().from(tenantsTable).orderBy(tenantsTable.name);
   res.json(tenants);
 });
 
-router.post("/tenants", async (req, res): Promise<void> => {
+router.post("/tenants", async (req: Request, res: Response): Promise<void> => {
   const parsed = CreateTenantBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -34,7 +34,7 @@ router.post("/tenants", async (req, res): Promise<void> => {
   }
 });
 
-router.get("/tenants/slug/:slug", async (req, res): Promise<void> => {
+router.get("/tenants/slug/:slug", async (req: Request, res: Response): Promise<void> => {
   const params = GetTenantBySlugParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -48,7 +48,7 @@ router.get("/tenants/slug/:slug", async (req, res): Promise<void> => {
   res.json(tenant);
 });
 
-router.get("/tenants/:id", async (req, res): Promise<void> => {
+router.get("/tenants/:id", async (req: Request, res: Response): Promise<void> => {
   const params = GetTenantParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -62,7 +62,7 @@ router.get("/tenants/:id", async (req, res): Promise<void> => {
   res.json(tenant);
 });
 
-router.patch("/tenants/:id", async (req, res): Promise<void> => {
+router.patch("/tenants/:id", async (req: Request, res: Response): Promise<void> => {
   const params = UpdateTenantParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
