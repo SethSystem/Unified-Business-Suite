@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { VitePWA } from "vite-plugin-pwa";
+import { fileURLToPath, URL } from "url";
 
 const rawPort = process.env.PORT;
 
@@ -103,7 +104,7 @@ export default defineConfig({
       ? [
           await import("@replit/vite-plugin-cartographer").then((m) =>
             m.cartographer({
-              root: path.resolve(import.meta.dirname, ".."),
+              root: path.resolve(fileURLToPath(new URL("..", import.meta.url))),
             }),
           ),
           await import("@replit/vite-plugin-dev-banner").then((m) =>
@@ -114,15 +115,17 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "src"),
-      "@assets": path.resolve(import.meta.dirname, "..", "..", "attached_assets"),
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+      "@assets": fileURLToPath(new URL("../../attached_assets", import.meta.url)),
     },
     dedupe: ["react", "react-dom"],
   },
-  root: path.resolve(import.meta.dirname),
+  root: fileURLToPath(new URL(".", import.meta.url)),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: fileURLToPath(new URL("dist/public", import.meta.url)),
     emptyOutDir: true,
+    sourcemap: true, // 🔹 habilita sourcemap completo
+    chunkSizeWarningLimit: 200, // 🔹 aumenta limite de aviso de chunk
   },
   server: {
     port,
