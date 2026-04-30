@@ -6,10 +6,10 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { VitePWA } from "vite-plugin-pwa";
 import { fileURLToPath, URL } from "url";
 
-const rawPort = process.env.PORT || "5173"; // default dev port
+const rawPort = process.env.PORT || "5173";
 const port = Number(rawPort);
 
-const basePath = process.env.BASE_PATH || "/"; // para deploy no Vercel, geralmente "/"
+const basePath = process.env.BASE_PATH || "/";
 
 export default defineConfig({
   base: basePath,
@@ -55,7 +55,7 @@ export default defineConfig({
             options: {
               cacheName: "google-fonts-cache",
               expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 600] },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
           {
@@ -64,7 +64,7 @@ export default defineConfig({
             options: {
               cacheName: "gstatic-fonts-cache",
               expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 600] },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
           {
@@ -73,14 +73,12 @@ export default defineConfig({
             options: {
               cacheName: "api-cache",
               expiration: { maxEntries: 50, maxAgeSeconds: 60 * 5 },
-              cacheableResponse: { statuses: [0, 600] },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
         ],
       },
-      devOptions: {
-        enabled: false,
-      },
+      devOptions: { enabled: false },
     }),
   ],
   resolve: {
@@ -92,10 +90,20 @@ export default defineConfig({
   },
   root: fileURLToPath(new URL(".", import.meta.url)),
   build: {
-    outDir: fileURLToPath(new URL("dist", import.meta.url)), // para Vercel, dist na raiz
+    outDir: fileURLToPath(new URL("dist", import.meta.url)), // para Vercel
     emptyOutDir: true,
-    sourcemap: true, // 🔹 habilita sourcemap
-    chunkSizeWarningLimit: 600, // 🔹 aumenta limite de chunk
+    sourcemap: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("react")) return "react-vendor";
+            return "vendor";
+          }
+        },
+      },
+    },
   },
   server: {
     port,
