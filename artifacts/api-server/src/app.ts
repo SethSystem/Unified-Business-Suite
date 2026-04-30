@@ -1,6 +1,6 @@
 import express, { type Express } from "express";
 import cors from "cors";
-import pinoHttp from "pino-http";
+import { pinoHttp } from "pino-http"; // CORREÇÃO 1: Adicionado as chaves { }
 import router from "./routes";
 import { logger } from "./lib/logger";
 
@@ -10,14 +10,16 @@ app.use(
   pinoHttp({
     logger,
     serializers: {
-      req(req) {
+      // CORREÇÃO 2: Adicionado ": any" para o parâmetro req
+      req(req: any) {
         return {
           id: req.id,
           method: req.method,
           url: req.url?.split("?")[0],
         };
       },
-      res(res) {
+      // CORREÇÃO 3: Adicionado ": any" para o parâmetro res
+      res(res: any) {
         return {
           statusCode: res.statusCode,
         };
@@ -25,6 +27,7 @@ app.use(
     },
   }),
 );
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
