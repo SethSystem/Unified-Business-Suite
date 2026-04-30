@@ -8,7 +8,6 @@ import { fileURLToPath, URL } from "url";
 
 const rawPort = process.env.PORT || "5173";
 const port = Number(rawPort);
-
 const basePath = process.env.BASE_PATH || "/";
 
 export default defineConfig({
@@ -90,15 +89,16 @@ export default defineConfig({
   },
   root: fileURLToPath(new URL(".", import.meta.url)),
   build: {
-    outDir: fileURLToPath(new URL("dist", import.meta.url)), // para Vercel
+    outDir: fileURLToPath(new URL("dist/public", import.meta.url)), // Vercel precisa de dist/public
     emptyOutDir: true,
     sourcemap: true,
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 600, // aumenta limite do aviso
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes("node_modules")) {
             if (id.includes("react")) return "react-vendor";
+            if (id.includes("@radix-ui")) return "radix-vendor";
             return "vendor";
           }
         },
