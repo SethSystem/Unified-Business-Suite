@@ -55,7 +55,7 @@ export default defineConfig({
             options: {
               cacheName: "google-fonts-cache",
               expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
+              cacheableResponse: { statuses: [0, 600] },
             },
           },
           {
@@ -64,7 +64,7 @@ export default defineConfig({
             options: {
               cacheName: "gstatic-fonts-cache",
               expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
+              cacheableResponse: { statuses: [0, 600] },
             },
           },
           {
@@ -73,7 +73,7 @@ export default defineConfig({
             options: {
               cacheName: "api-cache",
               expiration: { maxEntries: 50, maxAgeSeconds: 60 * 5 },
-              cacheableResponse: { statuses: [0, 200] },
+              cacheableResponse: { statuses: [0, 600] },
             },
           },
         ],
@@ -95,7 +95,7 @@ export default defineConfig({
     outDir: fileURLToPath(new URL("dist", import.meta.url)), // para Vercel, dist na raiz
     emptyOutDir: true,
     sourcemap: true, // 🔹 habilita sourcemap
-    chunkSizeWarningLimit: 200, // 🔹 aumenta limite de chunk
+    chunkSizeWarningLimit: 600, // 🔹 aumenta limite de chunk
   },
   server: {
     port,
