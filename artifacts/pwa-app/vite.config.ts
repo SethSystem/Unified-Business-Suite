@@ -6,27 +6,10 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { VitePWA } from "vite-plugin-pwa";
 import { fileURLToPath, URL } from "url";
 
-const rawPort = process.env.PORT;
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
+const rawPort = process.env.PORT || "5173"; // default dev port
 const port = Number(rawPort);
 
-if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
-}
-
-const basePath = process.env.BASE_PATH;
-
-if (!basePath) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
-  );
-}
+const basePath = process.env.BASE_PATH || "/"; // para deploy no Vercel, geralmente "/"
 
 export default defineConfig({
   base: basePath,
@@ -99,19 +82,6 @@ export default defineConfig({
         enabled: false,
       },
     }),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer({
-              root: path.resolve(fileURLToPath(new URL("..", import.meta.url))),
-            }),
-          ),
-          await import("@replit/vite-plugin-dev-banner").then((m) =>
-            m.devBanner(),
-          ),
-        ]
-      : []),
   ],
   resolve: {
     alias: {
@@ -122,19 +92,16 @@ export default defineConfig({
   },
   root: fileURLToPath(new URL(".", import.meta.url)),
   build: {
-    outDir: fileURLToPath(new URL("dist/public", import.meta.url)),
+    outDir: fileURLToPath(new URL("dist", import.meta.url)), // para Vercel, dist na raiz
     emptyOutDir: true,
-    sourcemap: true, // 🔹 habilita sourcemap completo
-    chunkSizeWarningLimit: 200, // 🔹 aumenta limite de aviso de chunk
+    sourcemap: true, // 🔹 habilita sourcemap
+    chunkSizeWarningLimit: 200, // 🔹 aumenta limite de chunk
   },
   server: {
     port,
     host: "0.0.0.0",
     allowedHosts: true,
-    fs: {
-      strict: true,
-      deny: ["**/.*"],
-    },
+    fs: { strict: true, deny: ["**/.*"] },
   },
   preview: {
     port,
